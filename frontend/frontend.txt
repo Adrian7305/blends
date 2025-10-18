@@ -1,0 +1,12 @@
+/frontend
+  /app
+    /auth
+    /onboarding
+    /events
+    /clubs
+    /profile
+    /dashboard
+  /components
+  /lib
+  /hooks
+  /styles
