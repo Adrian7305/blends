@@ -1,10 +1,9 @@
 const razorpay = require("../config/razorpay");
 const crypto = require("crypto");
 const Registration = require("../models/registration");
-const Event = require("../models/event");
 const generateQRCode = require("../utils/generateQRCode");
 const sendEmail = require("../utils/sendEmail");
-const User = require("../models/user");
+const User = require("../models/User");
 
 exports.createOrder = async (req, res, next) => {
   try {
@@ -49,15 +48,12 @@ exports.verifyPayment = async (req, res, next) => {
     registration.qrCode = qrDataUrl;
     await registration.save();
 
-    // Add user to event.registeredUsers
-    await Event.findByIdAndUpdate(eventId, { $push: { registeredUsers: registration.user } });
-
     // Optionally populate user email
     const user = await User.findById(userId);
 
     // Send confirmation email with QR (embedding base64)
     const html = `<p>Registration confirmed for event. Show this QR at check-in.</p><img src="${qrDataUrl}" />`;
-    await sendEmail({ to: user.email, subject: "Event Registration Confirmed", html });
+    await sendEmail(user.email, "Event Registration Confirmed", html);
 
     res.json({ verified: true, registration });
   } catch (err) {

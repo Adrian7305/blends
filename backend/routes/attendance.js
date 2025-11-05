@@ -1,10 +1,10 @@
 // routes/attendance.js
 const express = require("express");
-const { verifyQRandMarkAttendance } = require("../controllers/attendanceController.js");
+const { checkin } = require("../controllers/qrController.js");
 
 const router = express.Router();
 
-// ✅ POST route to verify QR & mark attendance
-router.post("/verify", verifyQRandMarkAttendance);
+// ✅ QR-based check-in using Registration model
+router.post("/checkin", checkin);
 
 module.exports = router;

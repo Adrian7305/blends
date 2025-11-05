@@ -15,6 +15,7 @@ const paymentRoutes = require("./routes/payment");
 const validateRoutes = require("./routes/validate");
 const otpRoutes = require("./routes/otp");
 const accountRoutes = require("./routes/account");
+const tagsRoutes = require("./routes/tags");
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/validate", validateRoutes);
 app.use("/api/otp", otpRoutes);
 app.use("/api/account", accountRoutes);
+app.use("/api/tags", tagsRoutes);
 
 // 🧩 Root route
 app.get("/", (req, res) => {

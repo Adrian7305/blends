@@ -4,8 +4,6 @@ const {
   createEvent,
   getEvents, // Changed from getAllEvents
   getEventById,
-  registerForEvent,
-  verifyPayment,
   updateEvent, // New import
   deleteEvent, // New import
 } = require("../controllers/eventController.js");
@@ -21,8 +19,6 @@ router.get("/:id", getEventById);
 router.put("/:id", updateEvent); // Update event details
 router.delete("/:id", deleteEvent); // Delete event
 
-// 💳 Razorpay + Registration Routes
-router.post("/:id/register", registerForEvent);
-router.post("/:id/verify-payment", verifyPayment);
+// 💳 Payment & registration are handled via /api/payments
 
 module.exports = router;
