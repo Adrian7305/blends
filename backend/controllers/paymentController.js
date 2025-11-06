@@ -1,62 +1,89 @@
-const razorpay = require("../config/razorpay");
-const crypto = require("crypto");
+const { StandardCheckoutClient, Env, StandardCheckoutPayRequest } = require("pg-sdk-node");
+const { randomUUID } = require("crypto");
 const Registration = require("../models/registration");
 const generateQRCode = require("../utils/generateQRCode");
 const sendEmail = require("../utils/sendEmail");
 const User = require("../models/User");
 
+// Initialize PhonePe Standard Checkout client
+const clientId = process.env.CLIENT_ID;
+const clientSecret = process.env.CLIENT_SECRET;
+const clientVersion = parseInt(process.env.CLIENT_VERSION, 10);
+const env = (process.env.PHONEPE_ENV === "PRODUCTION") ? Env.PRODUCTION : Env.SANDBOX;
+
+const phonePeClient = StandardCheckoutClient.getInstance(
+  clientId,
+  clientSecret,
+  clientVersion,
+  env
+);
+
 exports.createOrder = async (req, res, next) => {
   try {
-    const { amount } = req.body;
-    if (!amount) return res.status(400).json({ message: "amount required" });
+    const { amount, userId, eventId } = req.body;
+    if (!amount) return res.status(400).send("Amount is required");
+    if (!userId || !eventId) return res.status(400).send("userId and eventId are required");
 
-    const options = {
-      amount: Number(amount) * 100,
-      currency: "INR",
-      receipt: `rcpt_${Date.now()}`
-    };
+    const merchantOrderId = randomUUID();
+    const baseUrl = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+    const redirectUrl = `${baseUrl}/api/payments/check-status?merchantOrderId=${merchantOrderId}&userId=${userId}&eventId=${eventId}`;
 
-    const order = await razorpay.orders.create(options);
-    res.json(order);
-  } catch (err) {
-    next(err);
+    const request = StandardCheckoutPayRequest.builder()
+      .merchantOrderId(merchantOrderId)
+      .amount(Number(amount))
+      .redirectUrl(redirectUrl)
+      .build();
+
+    const response = await phonePeClient.pay(request);
+    return res.json({ checkoutPageUrl: response.redirectUrl ,merchantOrderId});
+  } catch (error) {
+    console.error("Error creating PhonePe order", error);
+    res.status(500).send("Error Creating Order");
   }
 };
 
-exports.verifyPayment = async (req, res, next) => {
+exports.checkStatus = async (req, res, next) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userId, eventId } = req.body;
-    const generated_signature = crypto.createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(razorpay_order_id + "|" + razorpay_payment_id)
-      .digest("hex");
+    const { merchantOrderId, userId, eventId } = req.query;
+    if (!merchantOrderId) return res.status(400).send("Merchant Order Id is required");
 
-    if (generated_signature !== razorpay_signature) {
-      return res.status(400).json({ verified: false, message: "Invalid signature" });
+    const response = await phonePeClient.getOrderStatus(merchantOrderId);
+    const status = response.state;
+
+    const frontendBase = process.env.FRONTEND_URL || "http://localhost:5173";
+
+    if (status === "COMPLETED") {
+      // If user and event context is present, create registration and send QR
+      if (userId && eventId) {
+        const registration = await Registration.create({
+          user: userId,
+          event: eventId,
+          paymentId: merchantOrderId,
+          orderId: merchantOrderId
+        });
+
+        const qrPayload = JSON.stringify({ registrationId: registration._id.toString() });
+        const qrDataUrl = await generateQRCode(qrPayload);
+        registration.qrCode = qrDataUrl;
+        await registration.save();
+
+        // Attempt to send email
+        try {
+          const user = await User.findById(userId);
+          if (user && user.email) {
+            const html = `<p>Registration confirmed for event. Show this QR at check-in.</p><img src="${qrDataUrl}" />`;
+            await sendEmail(user.email, "Event Registration Confirmed", html);
+          }
+        } catch (e) {
+          console.warn("Email sending failed", e);
+        }
+      }
+      return res.redirect(`${frontendBase}/success`);
+    } else {
+      return res.redirect(`${frontendBase}/failure`);
     }
-
-    // Save registration
-    const registration = await Registration.create({
-      user: userId,
-      event: eventId,
-      paymentId: razorpay_payment_id,
-      orderId: razorpay_order_id
-    });
-
-    // Generate QR and save
-    const qrPayload = JSON.stringify({ registrationId: registration._id.toString() });
-    const qrDataUrl = await generateQRCode(qrPayload);
-    registration.qrCode = qrDataUrl;
-    await registration.save();
-
-    // Optionally populate user email
-    const user = await User.findById(userId);
-
-    // Send confirmation email with QR (embedding base64)
-    const html = `<p>Registration confirmed for event. Show this QR at check-in.</p><img src="${qrDataUrl}" />`;
-    await sendEmail(user.email, "Event Registration Confirmed", html);
-
-    res.json({ verified: true, registration });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    console.error("Error checking PhonePe status", error);
+    res.status(500).send(`Error Checking Status: ${error?.message || error}`);
   }
 };

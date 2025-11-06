@@ -4,7 +4,7 @@ const paymentController = require("../controllers/paymentController");
 
 // POST /api/payments/create-order
 router.post("/create-order", paymentController.createOrder);
-// POST /api/payments/verify
-router.post("/verify", paymentController.verifyPayment);
+// GET /api/payments/check-status
+router.get("/check-status", paymentController.checkStatus);
 
 module.exports = router;

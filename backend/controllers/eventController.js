@@ -15,13 +15,7 @@ const createEvent = async (req, res) => {
   }
 };
 
-module.exports = {
-  createEvent,
-  getEvents,
-  getEventById,
-  updateEvent,
-  deleteEvent
-};
+// Exports moved to bottom to avoid referencing before initialization
 
 // ✅ Get events with filters + pagination
 const getEvents = async (req, res) => {
@@ -128,4 +122,12 @@ const deleteEvent = async (req, res) => {
     console.error("Error deleting event:", error);
     res.status(500).json({ message: "Server error while deleting event" });
   }
+};
+
+module.exports = {
+  createEvent,
+  getEvents,
+  getEventById,
+  updateEvent,
+  deleteEvent
 };

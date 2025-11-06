@@ -12,6 +12,7 @@
   "type": "commonjs",
   "dependencies": {
     "@getbrevo/brevo": "^3.0.1",
+    "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "body-parser": "^2.2.0",
@@ -22,7 +23,9 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.1",
     "node-cron": "^4.2.1",
-    "nodemailer": "^7.0.9"
+    "nodemailer": "^7.0.9",
+    "pg-sdk-node": "https://phonepe.mycloudrepo.io/public/repositories/phonepe-pg-sdk-node/releases/v2/phonepe-pg-sdk-node.tgz",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
