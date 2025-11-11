@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --primary: 262 84% 40%;
+    --primary-foreground: 0 0% 100%;
+    --card: 262 84% 4%;
+    --card-foreground: 0 0% 100%;
+    --popover: 262 84% 4%;
+    --popover-foreground: 0 0% 100%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 262 84% 40%;
+    --radius: 0.75rem;
+  }
+
+  body {
+    @apply bg-black text-gray-100 font-sans;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display font-bold;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-full px-6 py-3 font-semibold text-white transition-all duration-300;
+  }
+  .btn-primary {
+    @apply bg-purple hover:bg-purple-light shadow-glow;
+  }
+  .btn-secondary {
+    @apply bg-gray-800 hover:bg-gray-700;
+  }
+
+  .card {
+    @apply bg-gray-900 rounded-2xl border border-gray-800;
+  }
+
+  .nav-link {
+    @apply flex items-center gap-4 px-4 py-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200;
+  }
+
+  .nav-link.active {
+    @apply bg-purple text-white shadow-glow;
+  }
+}

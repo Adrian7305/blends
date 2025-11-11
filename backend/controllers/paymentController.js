@@ -87,3 +87,17 @@ exports.checkStatus = async (req, res, next) => {
     res.status(500).send(`Error Checking Status: ${error?.message || error}`);
   }
 };
+
+// New: Return payment status as JSON for polling flows
+exports.getStatus = async (req, res, next) => {
+  try {
+    const { merchantOrderId } = req.params;
+    if (!merchantOrderId) return res.status(400).json({ message: "Merchant Order Id is required" });
+
+    const response = await phonePeClient.getOrderStatus(merchantOrderId);
+    return res.json({ state: response.state });
+  } catch (error) {
+    console.error("Error getting PhonePe order status", error);
+    res.status(500).json({ message: `Error Getting Status: ${error?.message || error}` });
+  }
+};

@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
+const Registration = require("../models/registration");
+const Event = require("../models/event");
 const authMiddleware = require("../middleware/auth");
 
 /**
@@ -49,6 +51,62 @@ router.post("/delete", authMiddleware, async (req, res) => {
   } catch (err) {
     console.error("Error deleting account:", err);
     res.status(500).json({ message: "Server error while deleting account" });
+  }
+});
+
+/**
+ * @route   GET /account/registrations
+ * @desc    Get user's event registrations (tickets)
+ * @access  Private (JWT required)
+ */
+router.get("/registrations", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Find all registrations for the user and populate event details
+    const registrations = await Registration.find({ user: userId })
+      .populate('event', 'eventTitle eventType startDate endDate location bannerImage organizedBy')
+      .sort({ createdAt: -1 });
+
+    if (!registrations || registrations.length === 0) {
+      return res.status(200).json({
+        message: "No registrations found",
+        registrations: []
+      });
+    }
+
+    // Format the response to match frontend expectations
+    const formattedRegistrations = registrations.map(registration => ({
+      _id: registration._id,
+      ticketId: registration.orderId,
+      qrCode: registration.qrCode,
+      qr_code: registration.qrCode, // Alternative field name for compatibility
+      event: {
+        _id: registration.event._id,
+        eventTitle: registration.event.eventTitle,
+        name: registration.event.eventTitle, // Alternative field name for compatibility
+        eventType: registration.event.eventType,
+        startDate: registration.event.startDate,
+        date: registration.event.startDate, // Alternative field name for compatibility
+        endDate: registration.event.endDate,
+        location: registration.event.location,
+        venue: registration.event.location, // Alternative field name for compatibility
+        bannerImage: registration.event.bannerImage,
+        image: registration.event.bannerImage, // Alternative field name for compatibility
+        organizedBy: registration.event.organizedBy,
+        college: registration.event.organizedBy // Alternative field name for compatibility
+      },
+      createdAt: registration.createdAt,
+      checkedIn: registration.checkedIn
+    }));
+
+    res.status(200).json({
+      message: "Registrations fetched successfully",
+      registrations: formattedRegistrations
+    });
+  } catch (err) {
+    console.error("Error fetching user registrations:", err);
+    res.status(500).json({ message: "Server error while fetching registrations" });
   }
 });
 

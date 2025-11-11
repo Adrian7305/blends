@@ -6,5 +6,7 @@ const paymentController = require("../controllers/paymentController");
 router.post("/create-order", paymentController.createOrder);
 // GET /api/payments/check-status
 router.get("/check-status", paymentController.checkStatus);
+// GET /api/payments/status/:merchantOrderId
+router.get("/status/:merchantOrderId", paymentController.getStatus);
 
 module.exports = router;
