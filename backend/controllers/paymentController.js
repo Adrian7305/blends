@@ -30,7 +30,7 @@ exports.createOrder = async (req, res, next) => {
 
     const request = StandardCheckoutPayRequest.builder()
       .merchantOrderId(merchantOrderId)
-      .amount(Number(amount))
+      .amount(Number(amount)*100)
       .redirectUrl(redirectUrl)
       .build();
 
