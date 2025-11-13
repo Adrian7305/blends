@@ -78,7 +78,7 @@ const EventDetailPage = ({
   // Handle both frontend and API data structures
   const eventId = event.id || event._id;
   const eventTitle = event.name || event.eventTitle;
-  const eventImage = event.image || event.bannerImage || '/api/placeholder/800/400';
+  const eventImage = event.bannerImage || event.image || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=400&fit=crop';
   const collegeName = event.college || event.organizedBy;
   const eventDate = event.date || event.startDate;
   const eventCategory = event.category || event.eventType;

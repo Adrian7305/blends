@@ -237,7 +237,7 @@ function App() {
             <Route path="/order" element={<OrderPage orderDetails={orderDetails} onPaymentSuccess={handlePaymentSuccess} />} />
             <Route path="/success" element={<PaymentSuccessPage />} />
             <Route path="/failure" element={<PaymentFailurePage />} />
-            <Route path="/tickets" element={<MyTicketsPage tickets={myTickets} userProfile={userProfile} />} />
+            <Route path="/tickets" element={<MyTicketsPage userProfile={userProfile} />} />
           </Routes>
         </main>
         <Footer />

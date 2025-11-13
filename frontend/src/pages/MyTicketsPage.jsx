@@ -1,17 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Ticket, QrCode, Calendar, Clock, MapPin, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import { Ticket, Calendar, Clock, MapPin, X, Copy, RefreshCw } from 'lucide-react';
 import api from '../api/config';
 
-const TicketCard = ({ ticket, userProfile }) => {
-  const [expanded, setExpanded] = useState(false);
+const TicketCard = ({ ticket, userProfile, onOpen }) => {
   
   // Handle both frontend mock data and backend API data structures
   const eventId = ticket.event?._id || ticket.event?.id;
   const eventTitle = ticket.event?.eventTitle || ticket.event?.name;
-  const eventImage = ticket.event?.bannerImage || ticket.event?.image;
+  const eventImage = ticket.event?.bannerImage || ticket.event?.image || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&h=400&fit=crop';
   const eventDate = ticket.event?.startDate || ticket.event?.date;
   const eventTime = ticket.event?.time || 'TBA';
   const eventVenue = ticket.event?.location || ticket.event?.venue;
@@ -25,8 +23,8 @@ const TicketCard = ({ ticket, userProfile }) => {
       className="bg-surface rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-105 duration-300 hover:shadow-lg hover:shadow-purple-500/20"
       role="button"
       tabIndex={0}
-      onClick={() => setExpanded(e => !e)}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setExpanded(prev => !prev); }}
+      onClick={() => onOpen(ticket)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onOpen(ticket); }}
     >
       <div className="relative h-48 bg-cover bg-center" style={{ backgroundImage: `url(${eventImage})` }}>
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
@@ -34,10 +32,7 @@ const TicketCard = ({ ticket, userProfile }) => {
           <h3 className="text-2xl font-bold font-display">{eventTitle}</h3>
           <p className="text-sm text-gray-300">{eventCollege}</p>
         </div>
-        <div className="absolute top-3 right-3 bg-black/60 text-white px-3 py-1 rounded-full text-xs flex items-center gap-2">
-          <span>Details</span>
-          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </div>
+        <div className="absolute top-3 right-3 bg-black/60 text-white px-3 py-1 rounded-full text-xs">Details</div>
       </div>
       <div className="p-6">
         <div className="flex justify-between items-center mb-4">
@@ -50,50 +45,6 @@ const TicketCard = ({ ticket, userProfile }) => {
             <p className="font-mono text-lg text-white">{ticketId}</p>
           </div>
         </div>
-
-        {expanded && (
-          <>
-            <div className="grid grid-cols-2 gap-4 text-sm mb-6">
-              <div className="flex items-center gap-2">
-                <Calendar size={16} className="text-primary" />
-                <div>
-                  <p className="text-gray-400">Date</p>
-                  <p className="font-semibold text-white">{new Date(eventDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock size={16} className="text-primary" />
-                <div>
-                  <p className="text-gray-400">Time</p>
-                  <p className="font-semibold text-white">{eventTime}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 col-span-2">
-                <MapPin size={16} className="text-primary" />
-                <div>
-                  <p className="text-gray-400">Venue</p>
-                  <p className="font-semibold text-white">{eventVenue}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <QRCodeSVG value={ticket.qrCode || ticket.qr_code} size={120} level="H" />
-              <p className="text-xs text-gray-400 mt-2">QR Code for Entry</p>
-            </div>
-
-            <div className="mt-4">
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center w-full rounded-lg px-4 py-2 font-semibold bg-green-600 hover:bg-green-500 text-white transition-colors"
-              >
-                click here to join the whatsapp group
-              </a>
-            </div>
-          </>
-        )}
       </div>
     </div>
   );
@@ -104,6 +55,7 @@ const MyTicketsPage = ({ tickets: propTickets, userProfile }) => {
   const [isLoading, setIsLoading] = useState(!propTickets);
   const [error, setError] = useState(null);
   const [profile, setProfile] = useState(userProfile || null);
+  const [selectedTicket, setSelectedTicket] = useState(null);
 
   // Fetch user tickets if not provided via props
   const fetchUserTickets = React.useCallback(async () => {
@@ -237,9 +189,85 @@ const MyTicketsPage = ({ tickets: propTickets, userProfile }) => {
               className="animate-fadeInUp"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <TicketCard ticket={ticket} userProfile={userProfile || profile} />
+              <TicketCard ticket={ticket} userProfile={userProfile || profile} onOpen={setSelectedTicket} />
             </div>
           ))}
+        </div>
+      )}
+
+      {selectedTicket && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-surface rounded-2xl border border-gray-800 max-w-xl w-full overflow-hidden">
+            <div className="relative">
+              <img
+                src={(selectedTicket.event?.bannerImage || selectedTicket.event?.image || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&h=600&fit=crop')}
+                alt={selectedTicket.event?.eventTitle || selectedTicket.event?.name || 'Event'}
+                className="w-full h-48 object-cover"
+              />
+              <button
+                onClick={() => setSelectedTicket(null)}
+                className="absolute top-3 right-3 p-2 bg-black/60 text-white rounded-lg hover:bg-black/80"
+                aria-label="Close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6">
+              <h3 className="text-2xl font-bold text-white mb-1">{selectedTicket.event?.eventTitle || selectedTicket.event?.name}</h3>
+              <p className="text-gray-400 mb-4">{selectedTicket.event?.organizedBy || selectedTicket.event?.college}</p>
+
+              <div className="grid grid-cols-2 gap-4 text-sm mb-6">
+                <div className="flex items-center gap-2">
+                  <Calendar size={16} className="text-primary" />
+                  <div>
+                    <p className="text-gray-400">Date</p>
+                    <p className="font-semibold text-white">{(() => {
+                      try {
+                        const d = selectedTicket.event?.startDate || selectedTicket.event?.date;
+                        const dt = new Date(d);
+                        return isNaN(dt.getTime()) ? 'TBD' : dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                      } catch { return 'TBD'; }
+                    })()}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock size={16} className="text-primary" />
+                  <div>
+                    <p className="text-gray-400">Time</p>
+                    <p className="font-semibold text-white">{selectedTicket.event?.time || 'TBA'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 col-span-2">
+                  <MapPin size={16} className="text-primary" />
+                  <div>
+                    <p className="text-gray-400">Venue</p>
+                    <p className="font-semibold text-white">{selectedTicket.event?.location || selectedTicket.event?.venue || 'TBD'}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center mb-6">
+                <img
+                  src={selectedTicket.qrCode || selectedTicket.qr_code}
+                  alt="QR Code"
+                  className="w-40 h-40 rounded-lg border border-gray-700 bg-black"
+                />
+              </div>
+
+              <div className="flex items-center justify-between bg-surface-hover rounded-lg p-3">
+                <div>
+                  <p className="text-xs text-gray-400">Ticket ID</p>
+                  <p className="font-mono text-sm text-white">{selectedTicket._id || selectedTicket.ticketId}</p>
+                </div>
+                <button
+                  onClick={() => navigator.clipboard.writeText(String(selectedTicket._id || selectedTicket.ticketId))}
+                  className="px-3 py-2 rounded-lg border border-gray-700 text-gray-300 hover:bg-gray-800 flex items-center gap-2"
+                >
+                  <Copy size={14} /> Copy
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

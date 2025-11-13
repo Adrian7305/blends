@@ -9,6 +9,8 @@ const eventSchema = new mongoose.Schema({
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   location: { type: String, required: true },
+  organizedBy: { type: String },
+  bannerImage: { type: String },
   registrationFee: { type: Number, required: true },
   participants: [
     {
